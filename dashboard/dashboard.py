@@ -3,8 +3,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 # Load datasets using the correct relative paths
-day_data = pd.read_csv('./day.csv')  # Correct relative path
-hour_data = pd.read_csv('./hour.csv')  # Correct relative path
+day_data = pd.read_csv('./data/day.csv')  # Correct path to data folder
+hour_data = pd.read_csv('./data/hour.csv')  # Correct path to data folder
+
 
 # Sidebar options
 data_option = st.sidebar.selectbox('Choose Dataset:', ['Daily Data', 'Hourly Data'])
