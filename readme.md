@@ -20,11 +20,17 @@ pip install -r requirements.txt
 
 Jalankan Streamlit:
 
+buka powershell / terminal
+pindah menuju direktori proyek
+
+jalankan kode:
 streamlit run dashboard/dashboard.py
 Buka aplikasi di browser Anda dengan alamat http://localhost:8501.
 
 
 ===============================
+
+penjelasan mengenai analisis data yang saya lakukan berada pada cell text di file .ipynb
 
 
 
