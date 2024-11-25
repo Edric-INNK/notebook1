@@ -2,96 +2,132 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+from sklearn.cluster import KMeans
 
 # Load datasets using the correct relative paths
 day_data = pd.read_csv('./data/day.csv')  # Correct path to data folder
 hour_data = pd.read_csv('./data/hour.csv')  # Correct path to data folder
 
-# Sidebar options
-data_option = st.sidebar.selectbox('Choose Dataset:', ['Daily Data', 'Hourly Data'])
+# Sidebar options - Only the data selection (Daily or Hourly) remains
+data_option = st.sidebar.selectbox('Pilih Dataset:', ['Data Harian', 'Data Per Jam'])
 
 # Load appropriate dataset based on user selection
-if data_option == 'Daily Data':
+if data_option == 'Data Harian':
     data = day_data
-    st.title('Daily Bike Sharing Data')
+    st.title('Data Penyewaan Sepeda Harian')
 else:
     data = hour_data
-    st.title('Hourly Bike Sharing Data')
+    st.title('Data Penyewaan Sepeda Per Jam')
 
-# Filter options based on season
-season = st.sidebar.selectbox('Select Season:', [1, 2, 3, 4], format_func=lambda x: ['Spring', 'Summer', 'Fall', 'Winter'][x - 1])
-filtered_data = data[data['season'] == season]
+st.write("""
+**Welcome to dashboard perusahaan sepeda sewa ahaha**
+Dashboard ini dibuat dalam rangka mempermudah perusahaan untuk memahami data harian dan bulanan mengenai sewa sepeda.
 
-# Filter options based on weather condition
-weather = st.sidebar.selectbox(
-    'Select Weather Condition:', 
-    [1, 2, 3, 4], 
-    format_func=lambda x: [
-        'Clear/Few Clouds', 
-        'Mist/Cloudy', 
-        'Light Rain/Snow', 
-        'Heavy Rain/Snow'
-    ][x - 1]
+Di dashboard ini kita akan membahas dua hal utama:
+1. Apakah perbedaan musim mempengaruhi jumlah penyewaan sepeda? jika iya, maka bagaimanakah terdampaknya? 
+2. Apakah kondisi cuaca mempengaruhi jumlah penyewaan sepeda? jika iya, maka bagaimana juga dampaknya?
+3. Kita juga akan membahas aksi berikutnya yang perusahaan harus ambil untuk memiliki daya saing yang lebih kuat
+
+berikut akan ditunjukkan beberapa grafik serta penjelasan dan bagaimana grafik tersebut dapat memberi dampak pada
+jumlah penyewaan sepeda
+""")
+
+# **Analisis Multivariat: Hubungan Suhu dengan Penyewaan**
+st.write("### Hubungan Suhu dengan Penyewaan Sepeda")
+fig, ax = plt.subplots()
+sns.scatterplot(
+    x='temp', y='cnt', hue='season', data=data, palette='viridis', ax=ax
 )
-filtered_data = filtered_data[filtered_data['weathersit'] == weather]
+ax.set_title("Hubungan Suhu dengan Penyewaan Sepeda Berdasarkan Musim")
+ax.set_xlabel("Suhu Normalized")
+ax.set_ylabel("Total Penyewaan")
+st.pyplot(fig)
 
-# Display data based on filters
-st.write(f"**Data for Season: {['Spring', 'Summer', 'Fall', 'Winter'][season - 1]}**")
-st.write(f"**Weather Condition: {['Clear/Few Clouds', 'Mist/Cloudy', 'Light Rain/Snow', 'Heavy Rain/Snow'][weather - 1]}**")
+# **Analisis Multivariat: Hubungan Kelembapan dengan Penyewaan**
+st.write("### Hubungan Kelembapan dengan Penyewaan Sepeda")
+fig, ax = plt.subplots()
+sns.scatterplot(
+    x='hum', y='cnt', hue='season', data=data, palette='coolwarm', ax=ax
+)
+ax.set_title("Hubungan Kelembapan dengan Penyewaan Sepeda Berdasarkan Musim")
+ax.set_xlabel("Kelembapan")
+ax.set_ylabel("Total Penyewaan")
+st.pyplot(fig)
 
-# Visualization for Daily Data
-if data_option == 'Daily Data':
-    st.write("**Monthly Rentals by Season and Weather:**")
-    monthly_rentals = filtered_data.groupby('mnth')['cnt'].sum()
-    fig, ax = plt.subplots()
-    monthly_rentals.plot(kind='bar', ax=ax, color='orange')
-    ax.set_title('Total Bike Rentals per Month')
-    ax.set_xlabel('Month')
-    ax.set_ylabel('Total Rentals')
-    ax.set_xticks(range(len(monthly_rentals.index)))
-    ax.set_xticklabels(monthly_rentals.index, rotation=45)  # Rotate labels
-    st.pyplot(fig)
+# **Heatmap Korelasi antar Fitur Numerik**
+st.write("### Heatmap Korelasi Antar Fitur")
+corr = data[['temp', 'atemp', 'hum', 'windspeed', 'cnt']].corr()
+fig, ax = plt.subplots()
+sns.heatmap(corr, annot=True, cmap='coolwarm', ax=ax)
+ax.set_title("Korelasi Antar Fitur")
+st.pyplot(fig)
 
-    # Scatter plot: Rentals vs. Temperature
-    st.write("**Rentals vs. Temperature (Daily Data):**")
-    fig, ax = plt.subplots()
-    sns.scatterplot(x='temp', y='cnt', hue='season', data=filtered_data, palette='viridis', ax=ax)
-    ax.set_title("Temperature vs. Rentals by Season")
-    ax.set_xlabel("Normalized Temperature")
-    ax.set_ylabel("Total Rentals")
-    st.pyplot(fig)
+# **Penjelasan Grafik**
+st.write("""
+**Penjelasan Grafik**
+- Grafik pertama menunjukkan scatterplot yang mendetailkan jumlah total penyewaan di axis Y berdasarkan suhu normal yang ada di sekitar area (axis X). Warna pada tiap titik menunjukkan pada musim apa mereka menyewa sepeda tersebut. Grafik ini memberi insight tentang 3 hal: jumlah penyewaan berdasarkan musim, jumlah penyewaan berdasarkan suhu, dan rinciannya.
+- Grafik kedua menunjukkan scatterplot yang mendetailkan jumlah penyewaan sepeda di axis Y berdasarkan kelembapan di sumbu X, dengan warna titik-titik scatterplot berdasarkan musim. Ini memberi insight yang sama dengan grafik pertama, namun mengganti faktor suhu dengan kelembapan.
+- Grafik ketiga menunjukkan korelasi antara fitur-fitur yang ada dalam file CSV seperti temp, atemp, hum, windspeed, dan cnt. Grafik ini berguna untuk memberi wawasan tentang variabel mana yang paling mempengaruhi penyewaan sepeda.
+""")
 
-# Visualization for Hourly Data
-else:
-    st.write("**Average Hourly Rentals by Season and Weather:**")
-    hourly_rentals = filtered_data.groupby('hr')['cnt'].mean()
-    fig, ax = plt.subplots()
-    hourly_rentals.plot(kind='line', ax=ax, color='blue')
-    ax.set_title('Average Rentals per Hour')
-    ax.set_xlabel('Hour')
-    ax.set_ylabel('Average Rentals')
-    ax.set_xticks(range(len(hourly_rentals.index)))
-    ax.set_xticklabels(hourly_rentals.index, rotation=45)  # Rotate labels
-    st.pyplot(fig)
+# **Pertanyaan Bisnis 1:** Apakah perbedaan musim mempengaruhi pola penggunaan / penyewaan sepeda?
+st.write("### Total Penyewaan Sepeda Berdasarkan Musim")
+seasonal_rentals = data.groupby('season')['cnt'].sum()
+fig, ax = plt.subplots()
+seasonal_rentals.plot(kind='bar', ax=ax, color='orange')
+ax.set_title('Total Penyewaan Sepeda Berdasarkan Musim')
+ax.set_xlabel('Musim')
+ax.set_ylabel('Total Penyewaan')
+ax.set_xticks(range(len(seasonal_rentals.index)))
+ax.set_xticklabels(['Spring', 'Summer', 'Fall', 'Winter'], rotation=45)
+st.pyplot(fig)
 
-    # Scatter plot: Rentals vs. Humidity
-    st.write("**Rentals vs. Humidity (Hourly Data):**")
-    fig, ax = plt.subplots()
-    sns.scatterplot(x='hum', y='cnt', hue='season', data=filtered_data, palette='coolwarm', ax=ax)
-    ax.set_title("Humidity vs. Rentals by Season")
-    ax.set_xlabel("Humidity")
-    ax.set_ylabel("Total Rentals")
-    st.pyplot(fig)
+st.write("""
+- Dari sini kita dapat melihat bahwa iya, musim mempengaruhi berapa banyak sepeda yang digunakan / disewakan.
+- Lebih tepatnya, di musim-musim menjelang musim dingin (Fall / musim gugur memiliki hawa yang nyaman untuk bersepeda (harusnya))
+""")
 
-# Heatmap for Feature Correlation (Daily Data Only)
-if data_option == 'Daily Data':
-    st.write("**Correlation Heatmap for Numerical Features:**")
-    corr = filtered_data[['temp', 'atemp', 'hum', 'windspeed', 'cnt']].corr()
-    fig, ax = plt.subplots()
-    sns.heatmap(corr, annot=True, cmap='coolwarm', ax=ax)
-    ax.set_title("Feature Correlation Heatmap")
-    st.pyplot(fig)
+# **Pertanyaan Bisnis 2:** Apakah cuaca memiliki dampak terhadap penyewaan sepeda?
+st.write("### Penyewaan Sepeda Berdasarkan Kondisi Cuaca")
+weather_rentals = data.groupby('weathersit')['cnt'].mean()
+fig, ax = plt.subplots()
+weather_rentals.plot(kind='bar', ax=ax, color='green')
+ax.set_title('Rata-rata Penyewaan Sepeda Berdasarkan Kondisi Cuaca')
+ax.set_xlabel('Kondisi Cuaca')
+ax.set_ylabel('Rata-rata Penyewaan')
 
-# Additional data insights
-st.write("**Basic Statistics for Filtered Data:**")
-st.write(filtered_data.describe())
+# Dynamically set xticks and labels based on the data available
+ax.set_xticks(range(len(weather_rentals.index)))
+weather_labels = [
+    'Cerah / Sedikit Berawan', 
+    'Berkabut / Berawan', 
+    'Hujan Ringan / Salju', 
+    'Hujan Deras / Badai Salju'
+][:len(weather_rentals.index)]  # Slice labels to match the number of categories
+ax.set_xticklabels(weather_labels, rotation=45)
+
+st.pyplot(fig)
+
+st.write("""
+**Insight:**
+- Pertanyaan bisnis pertama telah terjawab, bahwa iya, musim memiliki dampak terhadap penyewaan sepeda.
+- Pertanyaan bisnis kedua juga sudah terjawab, bahwa cuaca (tidak terikat dengan perbedaan musim) pun juga memiliki dampak terhadap penyewaan sepeda.
+""")
+
+# **Menampilkan Statistik Dasar untuk Data yang Disaring**
+st.write("### Statistik Dasar untuk Data yang Disaring")
+st.write(data.describe())
+
+# **Kesimpulan untuk Pertanyaan Bisnis 1 dan 2**
+st.write("""
+## Kesimpulan:
+### Kesimpulan Pertanyaan 1:
+Iya, musim memberikan dampak terhadap jumlah penyewaan sepeda. Pada musim gugur dan musim dingin, penyewa akan lebih cenderung menyewa sepeda karena suhu yang lebih sejuk dan udara yang nyaman. Di musim panas, orang juga cenderung lebih tertarik untuk bersepeda karena banyaknya aktivitas luar ruangan di musim panas. Ini menjelaskan mengapa penyewaan lebih tinggi pada musim-musim tersebut.
+    
+### Kesimpulan Pertanyaan 2:
+Cuaca juga memberikan efek yang signifikan terhadap jumlah penyewaan sepeda. Penyewa akan lebih cenderung untuk menyewa sepeda ketika langit cerah dan tidak ada hujan. Penyewa juga menyewa sepeda saat cuaca berkabut atau mendung karena udara lebih sejuk. Namun, ketika terjadi hujan ringan atau badai salju, jumlah penyewaan sepeda turun drastis, karena orang lebih memilih untuk tidak bersepeda saat cuaca buruk.
+
+### Aksi Berikutnya untuk Perusahaan:
+- Melakukan marketing yang sesuai dengan musim, dengan fokus pada aktivitas luar ruangan pada musim panas dan musim semi, serta mempromosikan suasana sejuk untuk bersepeda di musim dingin dan gugur.
+- Memantau ramalan cuaca untuk memperkirakan hujan atau cuaca buruk agar perusahaan dapat merencanakan operasional dan anggaran dengan lebih baik pada hari-hari ketika penyewaan sepeda berkurang.
+""")
