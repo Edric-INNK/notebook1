@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-from sklearn.cluster import KMeans
 
 # Load datasets using the correct relative paths
 day_data = pd.read_csv('./data/day.csv')  # Correct path to data folder
@@ -20,7 +19,7 @@ else:
     st.title('Data Penyewaan Sepeda Per Jam')
 
 st.write("""
-**Welcome to dashboard perusahaan sepeda sewa ahaha**
+*Welcome to dashboard perusahaan sepeda sewa ahaha*
 Dashboard ini dibuat dalam rangka mempermudah perusahaan untuk memahami data harian dan bulanan mengenai sewa sepeda.
 
 Di dashboard ini kita akan membahas dua hal utama:
@@ -28,11 +27,69 @@ Di dashboard ini kita akan membahas dua hal utama:
 2. Apakah kondisi cuaca mempengaruhi jumlah penyewaan sepeda? jika iya, maka bagaimana juga dampaknya?
 3. Kita juga akan membahas aksi berikutnya yang perusahaan harus ambil untuk memiliki daya saing yang lebih kuat
 
-berikut akan ditunjukkan beberapa grafik serta penjelasan dan bagaimana grafik tersebut dapat memberi dampak pada
-jumlah penyewaan sepeda
+Berikut akan ditunjukkan beberapa grafik serta penjelasan dan bagaimana grafik tersebut dapat memberi dampak pada
+jumlah penyewaan sepeda.
 """)
 
-# **Analisis Multivariat: Hubungan Suhu dengan Penyewaan**
+# *Univariate Analysis*
+st.write("### Analisis Univariat")
+st.write("Distribusi Total Penyewaan Sepeda")
+fig, ax = plt.subplots()
+sns.histplot(day_data['cnt'], kde=True, bins=30, ax=ax)
+ax.set_title("Distribusi Total Penyewaan Sepeda")
+ax.set_xlabel("Total Penyewaan")
+ax.set_ylabel("Frekuensi")
+st.pyplot(fig)
+
+st.write("Distribusi Suhu Harian")
+fig, ax = plt.subplots()
+sns.histplot(day_data['temp'], kde=True, bins=30, color='red', ax=ax)
+ax.set_title("Distribusi Suhu Harian")
+ax.set_xlabel("Suhu (Normalized)")
+ax.set_ylabel("Frekuensi")
+st.pyplot(fig)
+
+st.write("""
+*Penjelasan Grafik*
+- Grafik pertama menunjukkan berapa banyak sepeda yang disewa per bulan (Jumlah/Bln) pada sumbu X, dengan sumbu Y menunjukkan seberapa sering jumlah tersebut terjadi.
+- Grafik kedua menunjukkan suhu rata-rata harian, memberikan wawasan tentang pola suhu di daerah tersebut.
+""")
+
+# *Categorical Analysis*
+st.write("### Analisis Kategorikal")
+st.write("Frekuensi Penyewaan Berdasarkan Musim")
+fig, ax = plt.subplots()
+sns.countplot(x='season', data=day_data, palette='pastel', ax=ax)
+ax.set_title("Frekuensi Penyewaan Berdasarkan Musim")
+ax.set_xlabel("Musim")
+ax.set_ylabel("Frekuensi")
+ax.set_xticks(range(4))
+ax.set_xticklabels(['Spring', 'Summer', 'Fall', 'Winter'], rotation=45)
+st.pyplot(fig)
+
+st.write("Frekuensi Penyewaan Berdasarkan Kondisi Cuaca")
+fig, ax = plt.subplots()
+sns.countplot(x='weathersit', data=day_data, palette='cool', ax=ax)
+ax.set_title("Frekuensi Penyewaan Berdasarkan Kondisi Cuaca")
+ax.set_xlabel("Kondisi Cuaca")
+ax.set_ylabel("Frekuensi")
+ax.set_xticks(range(4))
+ax.set_xticklabels([
+    'Cerah / Sedikit Berawan', 
+    'Berkabut / Berawan', 
+    'Hujan Ringan / Salju', 
+    'Hujan Deras / Badai Salju'
+], rotation=45)
+st.pyplot(fig)
+
+st.write("""
+*Penjelasan Grafik*
+- Grafik pertama menunjukkan jumlah penyewaan sepeda berdasarkan musim. Grafik ini memberikan wawasan tentang pola penyewaan yang berbeda pada setiap musim.
+- Grafik kedua menunjukkan jumlah penyewaan sepeda berdasarkan kondisi cuaca. Grafik ini memberikan wawasan tentang bagaimana cuaca dapat memengaruhi keputusan untuk menyewa sepeda.
+""")
+
+# *Multivariate Analysis: Hubungan Suhu dengan Penyewaan*
+st.write("### Analisis Multivariat")
 st.write("### Hubungan Suhu dengan Penyewaan Sepeda")
 fig, ax = plt.subplots()
 sns.scatterplot(
@@ -43,7 +100,7 @@ ax.set_xlabel("Suhu Normalized")
 ax.set_ylabel("Total Penyewaan")
 st.pyplot(fig)
 
-# **Analisis Multivariat: Hubungan Kelembapan dengan Penyewaan**
+# *Analisis Multivariat: Hubungan Kelembapan dengan Penyewaan*
 st.write("### Hubungan Kelembapan dengan Penyewaan Sepeda")
 fig, ax = plt.subplots()
 sns.scatterplot(
@@ -54,7 +111,7 @@ ax.set_xlabel("Kelembapan")
 ax.set_ylabel("Total Penyewaan")
 st.pyplot(fig)
 
-# **Heatmap Korelasi antar Fitur Numerik**
+# *Heatmap Korelasi antar Fitur Numerik*
 st.write("### Heatmap Korelasi Antar Fitur")
 corr = data[['temp', 'atemp', 'hum', 'windspeed', 'cnt']].corr()
 fig, ax = plt.subplots()
@@ -62,12 +119,12 @@ sns.heatmap(corr, annot=True, cmap='coolwarm', ax=ax)
 ax.set_title("Korelasi Antar Fitur")
 st.pyplot(fig)
 
-# **Penjelasan Grafik**
+# *Penjelasan Grafik*
 st.write("""
-**Penjelasan Grafik**
-- Grafik pertama menunjukkan scatterplot yang mendetailkan jumlah total penyewaan di axis Y berdasarkan suhu normal yang ada di sekitar area (axis X). Warna pada tiap titik menunjukkan pada musim apa mereka menyewa sepeda tersebut. Grafik ini memberi insight tentang 3 hal: jumlah penyewaan berdasarkan musim, jumlah penyewaan berdasarkan suhu, dan rinciannya.
-- Grafik kedua menunjukkan scatterplot yang mendetailkan jumlah penyewaan sepeda di axis Y berdasarkan kelembapan di sumbu X, dengan warna titik-titik scatterplot berdasarkan musim. Ini memberi insight yang sama dengan grafik pertama, namun mengganti faktor suhu dengan kelembapan.
-- Grafik ketiga menunjukkan korelasi antara fitur-fitur yang ada dalam file CSV seperti temp, atemp, hum, windspeed, dan cnt. Grafik ini berguna untuk memberi wawasan tentang variabel mana yang paling mempengaruhi penyewaan sepeda.
+*Penjelasan Grafik*
+- Grafik pertama menunjukkan scatterplot yang mendetailkan jumlah total penyewaan di sumbu Y berdasarkan suhu normal yang ada di sekitar area (sumbu X). Warna pada tiap titik menunjukkan musim penyewaan.
+- Grafik kedua menunjukkan scatterplot yang mendetailkan jumlah penyewaan sepeda di sumbu Y berdasarkan kelembapan di sumbu X, dengan warna titik-titik scatterplot berdasarkan musim.
+- Grafik ketiga menunjukkan korelasi antara fitur-fitur yang ada dalam file CSV seperti temp, atemp, hum, windspeed, dan cnt.
 """)
 
 # **Pertanyaan Bisnis 1:** Apakah perbedaan musim mempengaruhi pola penggunaan / penyewaan sepeda?
@@ -131,3 +188,4 @@ Cuaca juga memberikan efek yang signifikan terhadap jumlah penyewaan sepeda. Pen
 - Melakukan marketing yang sesuai dengan musim, dengan fokus pada aktivitas luar ruangan pada musim panas dan musim semi, serta mempromosikan suasana sejuk untuk bersepeda di musim dingin dan gugur.
 - Memantau ramalan cuaca untuk memperkirakan hujan atau cuaca buruk agar perusahaan dapat merencanakan operasional dan anggaran dengan lebih baik pada hari-hari ketika penyewaan sepeda berkurang.
 """)
+        
